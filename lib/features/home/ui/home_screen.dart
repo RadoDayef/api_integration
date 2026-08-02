@@ -16,31 +16,42 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String error = "";
+  int categoryPage = 1;
   bool isLoading = true;
   String category = "sports";
   List<ArticleModel> articles = [];
+  ScrollController scrollController = ScrollController();
+
+  void onScroll() {
+    if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 300) {
+      fetchArticles(page: categoryPage);
+    }
+  }
 
   @override
   void initState() {
     fetchArticles();
     super.initState();
+    scrollController.addListener(onScroll);
   }
 
-  void fetchArticles() async {
+  void fetchArticles({int page = 1}) async {
     setState(() {
       error = "";
       isLoading = true;
-      articles.clear();
+      if (page == 1) articles.clear();
     });
-    ResponseResult<List<ArticleModel>> result = await HomeRepo().getArticles(category);
+    ResponseResult<List<ArticleModel>> result = await HomeRepo().getArticles(category, page: page, pageSize: 5);
     if (result is SuccessResponse<List<ArticleModel>>) {
       setState(() {
         articles.addAll(result.data);
+        categoryPage++;
         isLoading = false;
       });
     } else {
       setState(() {
         error = (result as FailureResponse<List<ArticleModel>>).error;
+        print(error);
         isLoading = false;
       });
     }
@@ -72,6 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: (int index) {
               setState(() {
                 category = tabs[index].category;
+                categoryPage = 1;
                 fetchArticles();
               });
             },
@@ -99,6 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   return ListView.separated(
                     padding: .all(16),
                     itemCount: articles.length,
+                    controller: scrollController,
                     itemBuilder: (_, int index) {
                       ArticleModel article = articles[index];
                       return ArticleWidget(article);

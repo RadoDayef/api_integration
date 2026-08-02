@@ -6,9 +6,9 @@ import 'package:dio/dio.dart';
 class HomeRepo {
   final Dio dio = Dio();
 
-  Future<ResponseResult<List<ArticleModel>>> getArticles(String category) async {
+  Future<ResponseResult<List<ArticleModel>>> getArticles(String category, {required int page, required int pageSize}) async {
     try {
-      final Response<Map<String, dynamic>> response = await dio.get("${EndPoints.topHeadlines}?category=$category&${EndPoints.apiKey}");
+      final Response<Map<String, dynamic>> response = await dio.get("${EndPoints.topHeadlines}?page=$page&pageSize=$pageSize&category=$category&${EndPoints.apiKey}");
       List articlesData = response.data!["articles"];
       List<ArticleModel> articles = articlesData.map((article) => ArticleModel.fromJson(article)).toList();
       return SuccessResponse(articles);
